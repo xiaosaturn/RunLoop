@@ -36,19 +36,21 @@ static CGFloat CELL_HEIGHT = 135.f;
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    _tasks = [NSMutableArray array];
-    _maxQueueLength = 18;
+//    _tasks = [NSMutableArray array];
+//    _maxQueueLength = 18;
+//
+//    [self addRunLoopObserver];
+//
+//    self.tableV = [[UITableView alloc] initWithFrame:self.view.frame style:UITableViewStylePlain];
+//    self.tableV.delegate = self;
+//    self.tableV.dataSource = self;
+//
+//    [self.tableV registerClass:[UITableViewCell class] forCellReuseIdentifier:IDENTIFIER];
+//    [self.view addSubview:self.tableV];
+//
+//    _timer2 = [NSTimer scheduledTimerWithTimeInterval:0.001 target:self selector:@selector(timerMethod) userInfo:nil repeats:YES];
     
-    [self addRunLoopObserver];
-    
-    self.tableV = [[UITableView alloc] initWithFrame:self.view.frame style:UITableViewStylePlain];
-    self.tableV.delegate = self;
-    self.tableV.dataSource = self;
-    
-    [self.tableV registerClass:[UITableViewCell class] forCellReuseIdentifier:IDENTIFIER];
-    [self.view addSubview:self.tableV];
-    
-    _timer2 = [NSTimer scheduledTimerWithTimeInterval:0.001 target:self selector:@selector(timerMethod) userInfo:nil repeats:YES];
+    [self gcdDispatch];
 }
 
 + (void)addlabel:(UITableViewCell *)cell indexPath:(NSIndexPath *)indexPath{
@@ -208,6 +210,50 @@ static void callBack(CFRunLoopObserverRef observer,CFRunLoopActivity activity,vo
     });
     //启动定时器
     dispatch_resume(self.timer);
+}
+
+- (void)gcdDispatch{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"-----A-----");
+    });
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"-----B-----");
+    });
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"-----C-----");
+    });
+    
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^{
+        //NSLog(@"-----D-----");
+    });
+    
+    dispatch_queue_t queue1 = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_group_enter(group);
+    dispatch_async(queue1, ^{
+        dispatch_group_leave(group);
+        NSLog(@"任务D完成");
+    });
+    
+    dispatch_queue_t queue2 = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_group_enter(group);
+    dispatch_async(queue2, ^{
+        dispatch_group_leave(group);
+        NSLog(@"任务E完成");
+    });
+    
+    dispatch_queue_t queue3 = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_group_enter(group);
+    dispatch_async(queue3, ^{
+        dispatch_group_leave(group);
+        NSLog(@"任务F完成");
+    });
+    
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        NSLog(@"任务M完成");
+    });
+    
+    
 }
 
 @end
